@@ -65,3 +65,6 @@ SOLID (面向对象设计)中五个面向对象设计(OOD)的原则之一，类�
 #### 6.迪米特法则 (LOD)
 
 迪米特法则（Law of Demeter）又叫作最少知识原则（Least Knowledge Principle 简写LKP），就是说一个对象应当对其他对象有尽可能少的了解,不和陌生人说话。
+
+
+
