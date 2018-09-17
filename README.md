@@ -10,5 +10,5 @@
 
 [日志配置](./日志配置.md)
 
-[eval/exec函数](./eval函数和exec函数.md)
+[eval/exec函数](./PythonBasic/eval函数和exec函数.md)
 
