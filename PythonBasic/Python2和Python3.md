@@ -1,5 +1,6 @@
 # Python2.x与Python3.x
 参考文档：
+
 [Python官方文档](https://docs.python.org/3/whatsnew/3.0.html)
 
 [使用2to3移植代码](https://woodpecker.org.cn/diveintopython3/porting-code-to-python-3-with-2to3.html)
@@ -14,29 +15,29 @@ However, the broader Python ecosystem has amassed a significant amount of qualit
 
 ##常用接口
 
-###1.print函数
+### 1.print函数
 
-'''print'''语句没有了，取而代之的是'''print()'''函数。 Python 2.6与Python 2.7部分地支持这种形式的print语法。在Python 2.6与Python 2.7里面，以下三种形式是等价的：
-'''
+`print`语句没有了，取而代之的是`print()`函数。 Python 2.6与Python 2.7部分地支持这种形式的print语法。在Python 2.6与Python 2.7里面，以下三种形式是等价的：
+```
 print "xxz"
 print ("xxz") #注意print后面有个空格
 print("xxz")
-'''
+```
 Python 2.6实际已经支持新的print()语法
 
 ### Unicode
 
-在这里先普及一个背景知识，在Python2中，默认的str并不是真正意义上的字符串，而是一个'''byte'''数组，或者说是一个ASCII的字符串,而真正意义上的字符串是unicode类型的变量，可以实现'''decode'''方法。
+在这里先普及一个背景知识，在Python2中，默认的str并不是真正意义上的字符串，而是一个'''byte'''数组，或者说是一个ASCII的字符串,而真正意义上的字符串是unicode类型的变量，可以实现`decode`方法。
 
 
-![](../picture/unicode.jpg)
+![](../picture/unicode.png)
 
 
-从上面两张图片可以看到，在Python2.7中直接输出一串中文就会显示它的“本性”。在Pyhon3中，区分为str何byte类型。我们在传输数据的时候，一般是先将'str'转换为’byte‘类型，在接收数据的时候一般接收的都是’byte‘类型，所以需要解码操作。最后，Python3默认使用'utf-8'编码。
+从上面两张图片可以看到，在Python2.7中直接输出一串中文就会显示它的“本性”。在Pyhon3中，区分为str何byte类型。我们在传输数据的时候，一般是先将`str`转换为`byte`类型，在接收数据的时候一般接收的都是`byte`类型，所以需要解码操作。最后，Python3默认使用`utf-8`编码。
 
 ### 除法运算
 
-在Python2中，’/‘除法得到的是一个保留整数的结果，人称”地板除法“。
+在Python2中，`/`除法得到的是一个保留整数的结果，人称”地板除法“。
 
 ```
 >>> 10 / 3
@@ -64,7 +65,7 @@ rom __future__ import division
 ```
 需要注意的一点的是，浮点数精度的问题往往会导致意向不到的bug。
 
-在Python3中对除法进行了优化。'/'就是代表真除，'//'代表了向下取整除法，'%'代表取模的除法（返回除法的余数）。
+在Python3中对除法进行了优化。`/`就是代表真除，`//`代表了向下取整除法，`%`代表取模的除法（返回除法的余数）。
 ```
 >>> 3/2
 1.5
@@ -86,10 +87,10 @@ rom __future__ import division
 
 ### 3.异常捕获
 
-在Python2中，通常使用'''except Exception,e'''来捕获错误，还有'except (IOError ,ZeroDivisionError),e`来捕获一组异常。Python3中一般使用‘except Exception as e'来捕获异常。
+在Python2中，通常使用`except Exception,e`来捕获异常，还有`except (IOError ,ZeroDivisionError),e`来捕获一组异常。Python3中一般使用`except Exception as e`来捕获异常。
 
 ### 4.xrange()与range()
 
-'xrange()'用法与'range()'用法差不多，区别在与'xrange()'返回的是一个生成器，而'range()'直接返回的一个列表。生成器不会一次性生成所有的数据，而是被调用一次生成一次，所以生成器非常节约空间，但与之相对应的是浪费时间（时间与空间不可兼得）。
+`xrange()`用法与`range()`用法差不多，区别在与`xrange()`返回的是一个生成器，而`range()`直接返回的一个列表。生成器不会一次性生成所有的数据，而是被调用一次生成一次，所以生成器非常节约空间，但与之相对应的是浪费时间（时间与空间不可兼得）。
 
 ### 5.
