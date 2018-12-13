@@ -1,6 +1,7 @@
 # Python2.x与Python3.x
 参考文档：
 [Python官方文档](https://docs.python.org/3/whatsnew/3.0.html)
+
 [使用2to3移植代码](https://woodpecker.org.cn/diveintopython3/porting-code-to-python-3-with-2to3.html)
 
 What are the differences?
@@ -27,7 +28,9 @@ Python 2.6实际已经支持新的print()语法
 
 在这里先普及一个背景知识，在Python2中，默认的str并不是真正意义上的字符串，而是一个'''byte'''数组，或者说是一个ASCII的字符串,而真正意义上的字符串是unicode类型的变量，可以实现'''decode'''方法。
 
+
 ![](../picture/unicode.jpg)
+
 
 从上面两张图片可以看到，在Python2.7中直接输出一串中文就会显示它的“本性”。在Pyhon3中，区分为str何byte类型。我们在传输数据的时候，一般是先将'str'转换为’byte‘类型，在接收数据的时候一般接收的都是’byte‘类型，所以需要解码操作。最后，Python3默认使用'utf-8'编码。
 
