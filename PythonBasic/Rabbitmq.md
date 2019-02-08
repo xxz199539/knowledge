@@ -1,15 +1,21 @@
-###主流消息中间件介绍
+### 主流消息中间件介绍
 #### ActiveMQ
 ActiveMQ是Apache出品，最流行的，能力强劲的开源消息总线，并且他是一个完全支持JMS规范的消息中间件。其丰富的API、多种集群构建模式使得他成为业界老牌消息中间件，在中小型企业中应用广泛！
 MQ衡量指标：服务性能、数据存储、集群架构
 逐渐在被新型消息中间件替代，如果不是特别大的并发场景，Active模式也是一个很好的选择。其架构如下：
-![(..picture/rabbitmq/rabbitmq4.png)
+
+![](..picture/rabbitmq/rabbitmq4.png)
+
 #### Kafka
 Kafka是Linkedln开源分布式发布-订阅消息系统，目前归属于Apache顶级项目。Kafka主要特点是基于Pull模式来处理消息消费，追求高吞吐量，一开始就是为大数据设计，的目的就是用于日志收集和传输。0.8版本开始支持复制，不支持事务，对消息的重复、丢失、错误没有严格要求，基于内存，适合产生大量数据的互联网服务的数据收集业务。集群架构如下：
-![(..picture/rabbitmq/rabbitmq5.png)
+
+![](..picture/rabbitmq/rabbitmq5.png)
+
 ####RocketMQ
 RocketMQ是阿里开源的消息中间件，目前也是Apache的顶级项目，纯Java开发，具有高吞吐量、高可用性、适合大规模分布式系统应用的特点。RocketMQ思路起源于Kafka，它对消息的可靠性传输及事务性做了优化，目前在阿里集团被广泛应用于交易、充值、流计算、消息推送、日志流式处理、binglog分发等场景。保证消息队列的顺序性，集群架构多维（1-1,1-n,n-n）,维护困难，商业版收费。及架构如下：
-![(..picture/rabbitmq/rabbitmq6.png)
+
+![](..picture/rabbitmq/rabbitmq6.png)
+
 ### RabbitMQ
 #### RabbitMQ简介
 RabbitMQ是一个开源的消息代理和队列服务器，用来通过普通协议在完全不同的应用之间共享数据，RabbitMQ是使用Erlang语言来编写的，并且RabbitMQ是基于AMQP协议的。
@@ -36,7 +42,7 @@ RabbitMQ整体架构如下图：![](..picture/rabbitmq/rabbitmq2.png)
 RabbitMQ消息流转图如下图：![](..picture/rabbitmq/rabbitmq3.png)
 
 RabbitMQ负载均衡集群如下图：![](..picture/rabbitmq/rabbitmq7.png)
-####安装启动RabbitMQ
+#### 安装启动RabbitMQ
 1.安装：
 在Mac下执行`brew install rabbitmq`，会自动安装rabbitmq和依赖的erlang语言。
 ```
@@ -94,14 +100,14 @@ Access them with `erl -man`, or add this directory to MANPATH.
 ```
 import pika
 
-# 建立与RabbitMQ服务器的连接
+#建立与RabbitMQ服务器的连接
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 channel = connection.channel()
 
 #在RabbitMQ中，消息永远不能直接发送到队列，而是先通过交换机,我们在这使用一种由空字符串标识的默认交换（允许准确地指定消息应该去哪个队列，需要在`routing_key`中指定队列名称）
 channel.basic_publish(exchange='',routing_key='hello',body='Hello World！')
 print(" [x] Sent 'Hello World!'")
-# 在退出程序之前，我们需要确保刷新网络缓冲区并且我们的消息实际上已传递给RabbitMQ。我们可以通过轻轻关闭连接来实现
+#在退出程序之前，我们需要确保刷新网络缓冲区并且我们的消息实际上已传递给RabbitMQ。我们可以通过轻轻关闭连接来实现
 connection.close()
 ```
 ##### receive.py
