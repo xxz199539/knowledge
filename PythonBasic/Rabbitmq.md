@@ -127,15 +127,23 @@ print(' [*] Waiting for messages. To exit press CTRL+C')
 channel.start_consuming() # 启动无限循环的监听
 
 ```
-Part1简单说明了如何发送及接受消息。执行==receive.py==后可以看到：`[*] Waiting for messages. To exit press CTRL+C`，这意味着我们的RabbitMQ已经开始监听消息。此时执行==send.py==发送消息后可以在屏幕上看到` [*] Waiting for messages. To exit press CTRL+C
-[x] Received b'Hello World\xef\xbc\x81'`
+Part1简单说明了如何发送及接受消息。执行==receive.py==后可以看到：
+```
+[*] Waiting for messages. To exit press CTRL+C
+```
+这意味着我们的RabbitMQ已经开始监听消息。此时执行==send.py==发送消息后可以在屏幕上看到
+```
+[*] Waiting for messages. To exit press CTRL+C
+[x] Received b'Hello World\xef\xbc\x81'
+```
+
 在终端上查看队列：
+```
 xiangxianzhangdeMacBook-Pro:sbin xiangxianzhang$ rabbitmqctl list_queues
 Timeout: 60.0 seconds ...
 Listing queues for vhost / ...
 name	messages
-hello	0```
-
+hello	0
 ```
 
 #### part2 Work Queues
