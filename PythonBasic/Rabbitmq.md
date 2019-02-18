@@ -7,7 +7,7 @@ MQ衡量指标：服务性能、数据存储、集群架构
 #### Kafka
 Kafka是Linkedln开源分布式发布-订阅消息系统，目前归属于Apache顶级项目。Kafka主要特点是基于Pull模式来处理消息消费，追求高吞吐量，一开始就是为大数据设计，的目的就是用于日志收集和传输。0.8版本开始支持复制，不支持事务，对消息的重复、丢失、错误没有严格要求，基于内存，适合产生大量数据的互联网服务的数据收集业务。集群架构如下：
 ![(..picture/rabbitmq/rabbitmq5.png)
-####RocketMQ
+#### RocketMQ
 RocketMQ是阿里开源的消息中间件，目前也是Apache的顶级项目，纯Java开发，具有高吞吐量、高可用性、适合大规模分布式系统应用的特点。RocketMQ思路起源于Kafka，它对消息的可靠性传输及事务性做了优化，目前在阿里集团被广泛应用于交易、充值、流计算、消息推送、日志流式处理、binglog分发等场景。保证消息队列的顺序性，集群架构多维（1-1,1-n,n-n）,维护困难，商业版收费。及架构如下：
 ![(..picture/rabbitmq/rabbitmq6.png)
 ### RabbitMQ
@@ -127,23 +127,15 @@ print(' [*] Waiting for messages. To exit press CTRL+C')
 channel.start_consuming() # 启动无限循环的监听
 
 ```
-Part1简单说明了如何发送及接受消息。执行==receive.py==后可以看到：
-```
-[*] Waiting for messages. To exit press CTRL+C
-```
-这意味着我们的RabbitMQ已经开始监听消息。此时执行==send.py==发送消息后可以在屏幕上看到
-```
-[*] Waiting for messages. To exit press CTRL+C
-[x] Received b'Hello World\xef\xbc\x81'
-```
-
+Part1简单说明了如何发送及接受消息。执行==receive.py==后可以看到：`[*] Waiting for messages. To exit press CTRL+C`，这意味着我们的RabbitMQ已经开始监听消息。此时执行==send.py==发送消息后可以在屏幕上看到` [*] Waiting for messages. To exit press CTRL+C
+[x] Received b'Hello World\xef\xbc\x81'`
 在终端上查看队列：
-```
 xiangxianzhangdeMacBook-Pro:sbin xiangxianzhang$ rabbitmqctl list_queues
 Timeout: 60.0 seconds ...
 Listing queues for vhost / ...
 name	messages
-hello	0
+hello	0```
+
 ```
 
 #### part2 Work Queues
@@ -302,3 +294,123 @@ channel.start_consuming()
 ```
  使用消息确认和`prefetch_couny`可以设置工作队列，即使RabbitMQ重新启动，持久性选项也可以使任务生效。
 
+#### part3 Publish/Subscribe
+在前几部分中，我们向队列发送消息和从队列接收消息。现在是时候在Rabbit中引入完整的消息传递模型了。
+
+RabbitMQ中消息传递模型的核心思想是生产者永远不会将任何消息直接发送到队列，实际上，生产者通常甚至不知道消息是否会被传递到任何队列。
+
+相反，生产者只能向Exchange（交换机）发送消息，交换机只做两件事：1.它接收来自生产者的消息；2.将消息传递到队列。交换机必须知道他该如何处理收到的消息，无论是附加到特定队列还是附加到多个队列或者是丢弃，都是由交换类型来定义。
+
+![](http://www.rabbitmq.com/img/tutorials/exchanges.png)
+
+交换机有几种可供可选的类型：`direct`,'topic`,'headers`,`fanout`，这里只看最后一种。新建一个交换机，命名为`log`。
+```
+Channel.exchange_declare(exchange='logs',exchange_type='fanout')
+```
+`fanout`交换机非常简单，他只是将受到的所有消息广播到他知道的所有队列中，而这正式我们记录器所需要的。   
+在之前我们是通过默认的交换机通过空字符串来识别并向队列发送消息。 
+```
+channel.basic_publish（exchange = ''，
+                      routing_key = 'hello'，
+                      body = message）
+```
+该`exchange`参数是交换机的名称，空字符表示默认或无名交换，消息通过`routing_key`指定的名称路由到队列（如果存在）。
+现在，我们可以发布到我们自己命名来交换：
+```
+channel.basic_publish（exchange = 'logs'，
+                      routing_key = ''，
+                      body = message）
+```
+                                      
+##### 临时队列
+在之前我用过·hello`和`task_queue`队列，当我们想将==worker==指向同一队列，在消费者和生产者之间共享队列时，为队列命名显得十分重要。
+
+但是我们的记录器并非如此，我们希望了解所有的日志消息，而不仅仅是他们的一部分，另外我们也只对目前流动的消息感兴趣，为了解决这个问题，需要做两件事：
+首先，每当我们连接RabbitMQ时，我们都需要一个新的空队列，要做到这一点我们可以创建一个随机名称的队列，甚至是让服务器随机为我们选择一个随机队列名称。我们可以通过不向`queue_declare`提供`queue`参数来做到：
+```
+result = channel.queue_declare()
+```                             
+此时，`result.method.queue`包含随机队列名称，例如`amq.gen-JzTY20BRgKO-HjmUJj0wLg`。
+
+其次，关闭消费者连接后，应该删除队列，通过`exclusive`标志位来实现：
+result = channel.queue_declare(exclusive=True)
+
+##### 绑定
+![](http://www.rabbitmq.com/img/tutorials/bindings.png)
+我们现在已经创建了一个`fanout`交换机和一个队列，现在需要告诉交换机将消息发送到我们的队列，交换机和队列之间的关系称为绑定(binding)
+```
+channel.queue_bind(exchange = 'logs',queue=result.method.queue)
+```
+从现在开始，`logs`交换机将会将消息附加到我们的队列中。
+
+列出所有绑定：`rabbitmqctl list_bindings`
+
+把他们放在一起：
+![](http://www.rabbitmq.com/img/tutorials/python-three-overall.png)
+
+生成日志消息的生产者程序与part 2没什么太大的不同，最重要的变化是我们现在想要将消息发布到我们的`logs`交换机而不是无名交换机。我们需要在发送时提供`routing_key`，但是对于`fanout`交换机，它的值会被忽略。`emit_log.py`:
+```
+#!/usr/bin/env python
+import pika
+import sys
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='logs',
+                         exchange_type='fanout')
+
+message = ' '.join(sys.argv[1:]) or "info: Hello World!"
+channel.basic_publish(exchange='logs',
+                      routing_key='',
+                      body=message)
+print(" [x] Sent %r" % message)
+connection.close()
+```
+在建立连接后，我们指明了交换机名称及其类型，此步骤是必要的，因为禁止发布到不存在的交换机。如果没有队列绑定到交换机，消息将会丢失，但这对我们没有影响，如果没有消费者在监听，我们可以安全地丢弃该消息。`receive_logs.py`：
+```
+#!/usr/bin/env python
+import pika
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='logs',
+                         exchange_type='fanout')
+
+result = channel.queue_declare(exclusive=True) # 一旦消费者关闭，队列删除
+queue_name = result.method.queue # 服务器随机指定队列名称
+
+channel.queue_bind(exchange='logs',
+                   queue=queue_name)
+
+print(' [*] Waiting for logs. To exit press CTRL+C')
+
+def callback(ch, method, properties, body):
+    print(" [x] %r" % body)
+
+channel.basic_consume(callback,
+                      queue=queue_name,
+                      no_ack=True)
+
+channel.start_consuming()
+```
+现在大功告成，如果要将日志保存到文件，只需要打开控制台并输入：
+`python receive_logs.py > logs_from_rabbit.log`
+
+如果希望在屏幕上看到日志，新建终端并输入：
+`python receive_logs.py`
+
+当然，我们还需要指明日志类型：
+
+`python emit_log.py`
+
+使用`rabbitmqctl list_bindings`可以验证代码是否实际创建了我们想要的绑定和队列，运行两个`receive_logs.py`程序时，应该看到如下示例：
+
+```
+sudo rabbitmqctl list_bindings
+ ＃=>列出绑定... 
+＃=> logs exchange amq.gen-JzTY20BRgKO-HjmUJj0wLg queue [] 
+＃=> logs exchange amq.gen-vso0PVvyiRIL2WoV3i48Yg queue [] 
+＃=> ... done。
+```                                                                                                                                                                                                                                                                                                                                                                                                                                                      
