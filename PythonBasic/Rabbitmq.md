@@ -197,7 +197,7 @@ print(' [*] Waiting for messages. To exit press CTRL+C')
 channel.start_consuming() # 启动无限循环的监听
 
 ```
-Part1简单说明了如何发送及接受消息。执行==receive.py==后可以看到：`[*] Waiting for messages. To exit press CTRL+C`，这意味着我们的RabbitMQ已经开始监听消息。此时执行==send.py==发送消息后可以在屏幕上看到` [*] Waiting for messages. To exit press CTRL+C
+Part1简单说明了如何发送及接受消息。执行**receive.py**后可以看到：`[*] Waiting for messages. To exit press CTRL+C`，这意味着我们的RabbitMQ已经开始监听消息。此时执行**send.py**发送消息后可以在屏幕上看到` [*] Waiting for messages. To exit press CTRL+C
 [x] Received b'Hello World\xef\xbc\x81'`
 在终端上查看队列：
 
@@ -238,7 +238,7 @@ def callback(ch, method, properties, body):
     print(" [x] Done")
 ```
 ##### 循环调度
-使用任务队列的一个好处就是他可以==并行==地处理消息。如果我们的消息很多，那么我们可以添加更过的worker。下面我们将尝试同时运行两个worker，他们都会从队列中获取消息。
+使用任务队列的一个好处就是他可以**并行**地处理消息。如果我们的消息很多，那么我们可以添加更过的worker。下面我们将尝试同时运行两个worker，他们都会从队列中获取消息。
 
 先发送五条消息：
 ```
@@ -276,7 +276,7 @@ Worker2:
  [x] Received b'Fifth message.....'
  [x] Done
 ```
-默认情况下，RabbitMQ会按顺序将每条消息发送给下一个消费者，平均而言，每个消费者将获得相同数量的消息。这种分发消息的方式称为==循环法==。
+默认情况下，RabbitMQ会按顺序将每条消息发送给下一个消费者，平均而言，每个消费者将获得相同数量的消息。这种分发消息的方式称为**循环法**。
 
 ##### 消息确认(message acknowledgments)
 
@@ -284,7 +284,7 @@ Worker2:
 
 所以我们在一个worker停止工作的时候，要做好工作交接，确保不会丢失任何消息。
 
-为了确保消息永不丢失，RabbitMQ支持消息确认，消费者返回==ack==(nowledgement)告诉RabbitMQ已收到，处理了这条消息，RabbitMQ可以自由删除它。如果消费者死亡（其通道关闭，连接关闭或者TCP连接丢失）而不能发送回执，RabbitMQ将未完全处理的消息排队并重新排队，如果同时有其他在线消费者，则会迅速将其重新发送给其他消费者。这样就可以确保没有消息丢失。
+为了确保消息永不丢失，RabbitMQ支持消息确认，消费者返回**ack**(nowledgement)告诉RabbitMQ已收到，处理了这条消息，RabbitMQ可以自由删除它。如果消费者死亡（其通道关闭，连接关闭或者TCP连接丢失）而不能发送回执，RabbitMQ将未完全处理的消息排队并重新排队，如果同时有其他在线消费者，则会迅速将其重新发送给其他消费者。这样就可以确保没有消息丢失。
 
 消息不会超时，当消费者死亡时，RabbitMQ将重新发送消息，即使处理消息需要非常长的时间，也没有关系。
 默认情况下，手动消息确认已打开。在前面的示例中，我们通过`no_ack = True`标志明确地将它们关闭。在我们完成任务后，是时候删除此标志并从工作人员发送适当的确认。
@@ -410,7 +410,7 @@ channel.basic_publish（exchange = 'logs'，
 ```
                                       
 ##### 临时队列
-在之前我用过·hello`和`task_queue`队列，当我们想将==worker==指向同一队列，在消费者和生产者之间共享队列时，为队列命名显得十分重要。
+在之前我用过·hello`和`task_queue`队列，当我们想将**worker**指向同一队列，在消费者和生产者之间共享队列时，为队列命名显得十分重要。
 
 但是我们的记录器并非如此，我们希望了解所有的日志消息，而不仅仅是他们的一部分，另外我们也只对目前流动的消息感兴趣，为了解决这个问题，需要做两件事：
 首先，每当我们连接RabbitMQ时，我们都需要一个新的空队列，要做到这一点我们可以创建一个随机名称的队列，甚至是让服务器随机为我们选择一个随机队列名称。我们可以通过不向`queue_declare`提供`queue`参数来做到：
@@ -504,3 +504,125 @@ sudo rabbitmqctl list_bindings
 ＃=> logs exchange amq.gen-vso0PVvyiRIL2WoV3i48Yg queue [] 
 ＃=> ... done。
 ```                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+
+#### part4 路由
+
+在之前，我们构建了一个简单的日至系统，能够向许多接收者广播日志消息，在这一部分我们将添加一个功能-只订阅一部分消息。例如，我们只将关键错误消息定向到日志文件（节省磁盘空间），同时仍然能够在控制台上打印所有的日志消息。
+在之前的例子中，我们已经创建了绑定，就像这样：
+```
+channel.queue_bind(exchange=exchange_name,
+                   queue=queue_name)
+```
+绑定是交换机和队列的介质，可以简单地理解为：队列只对来自交换机的消息感兴趣。绑定可以采用额外的`routing_key`参数，为了避免`basic_publish`参数混淆，我们可以将其称为绑定秘钥。使用键创建绑定：
+```
+channel.queue_bind(exchange=exchange_name,
+                   queue=queue_name,
+                   routing_key='black')
+```
+
+##### Direct exchange
+在之前的日志中，系统将向所有的消费者广播所有消息，但是我们更多的是希望根据消息的严重性过滤消息。比如，我们更希望将日志消息写入磁盘的脚本仅接受`error`或者`stratic`级别的日志，而不是在`warning`或者`info`上浪费磁盘空间，我们之前使用的`fanout`类型的交换机不能给我们带来太多的灵活性-它只能进行无意识的广播。
+
+现在我们使用`direct`交换机（直接交换），其背后的路由算法很简单-消息进入队列，其`binding key`(绑定秘钥)与消息的`routing key`(路由秘钥)完全匹配。参考以下设置：
+
+![](http://www.rabbitmq.com/img/tutorials/direct-exchange.png)
+
+在此设置中，我们可以看到命名为`x`的`direct`交换机和两个绑定到它的队列。第一个队列绑定橙色，第二个队列有两个绑定，一个`binding key`为黑色，另一个为绿色。
+在这样的设置中，使用`routing key`为`orange`发布到交换机的消息将被路由队列**Q1**。`routing key`为黑色或绿色的消息将会转到**Q2**，其他的消息都会被丢弃。
+
+##### 多个绑定
+
+![](http://www.rabbitmq.com/img/tutorials/direct-exchange-multiple.png)
+
+使用相同的`binding key`绑定多个队列时完全合法的，在这个示例中，可以在`x`和`Q1`之间添加黑色的绑定，在这种情况下，`direct`类型的绑定和`fanout`一样，将消息广播到所有匹配的队列。
+
+##### 发送日志
+
+我们将此模型用于我们的日志系统，将消息发送给`direct`交换机而不是`fanout`类型，将提供日志的等级作为`routing key`，这样接收脚本将能够选择它想要接收的严重性。
+
+首先创建一个交换机：
+```
+channel.exchange_declare(exchange='direct_logs',
+                         exchange_type='direct')
+```
+然后发送一条消息：
+```
+channel.basic_publish(exchange='direct_logs',
+                      routing_key=severity,
+                      body=message)
+```
+
+##### 订阅
+接收消息将像`part 3`里面的一样，但是将为我们感兴趣的每个日志等级创建一个新的绑定。
+```
+result = channel.queue_declare(exclusive=True)
+queue_name = result.method.queue
+
+for severity in severities:
+    channel.queue_bind(exchange='direct_logs',
+                       queue=queue_name,
+                       routing_key=severity)
+```
+
+好，现在将他们放在一起：
+![](http://www.rabbitmq.com/img/tutorials/python-four.png)
+`emit_log_direct.py`:
+```
+#!/usr/bin/env python
+import pika
+import sys
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='direct_logs',
+                         exchange_type='direct')
+
+severity = sys.argv[1] if len(sys.argv) > 1 else 'info'
+message = ' '.join(sys.argv[2:]) or 'Hello World!'
+channel.basic_publish(exchange='direct_logs',
+                      routing_key=severity,
+                      body=message)
+print(" [x] Sent %r:%r" % (severity, message))
+connection.close()
+```
+'receive_logs_direct.py':
+```
+#!/usr/bin/env python
+import pika
+import sys
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='direct_logs',
+                         exchange_type='direct')
+
+result = channel.queue_declare(exclusive=True)
+queue_name = result.method.queue
+
+severities = sys.argv[1:]
+if not severities:
+    sys.stderr.write("Usage: %s [info] [warning] [error]\n" % sys.argv[0])
+    sys.exit(1)
+
+for severity in severities:
+    channel.queue_bind(exchange='direct_logs',
+                       queue=queue_name,
+                       routing_key=severity)
+
+print(' [*] Waiting for logs. To exit press CTRL+C')
+
+def callback(ch, method, properties, body):
+    print(" [x] %r:%r" % (method.routing_key, body))
+
+channel.basic_consume(callback,
+                      queue=queue_name,
+                      no_ack=True)
+
+channel.start_consuming()
+```
+如果只想将'warning`和`error`日志消息保存到文件中，只需要打开控制台输入：
+`python receive_logs_direct.py warning error > logs_from_rabbit.log`,
+如果想看到所有的日志消息，可以在控制台输入：
+`python receive_logs_direct.py info warning error`
