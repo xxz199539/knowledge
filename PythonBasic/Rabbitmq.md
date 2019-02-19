@@ -44,23 +44,23 @@ AMQP定义：是具有现代特征的二进制协议。是一个提供统一消�
 AMQP的主要特征是面向消息、队列、路由（包括点对点和发布/订阅）、可靠性、安全，更多用在企业系统内，对数据一致性，稳定性和可靠性要求很高的场景，对性能和吞吐量的要求还在其次。
 AMQP核心概念：
 
-1.==Server==：又称Broker，接受客户端的链接，实现AMQP实体服务
+1.**Server**：又称Broker，接受客户端的链接，实现AMQP实体服务
 
-2.==Connection==：连接，应用程序与Broker的网络连接
+2.**Connection**：连接，应用程序与Broker的网络连接
 
-3.==Channel==：网络信道，几乎所有的操作都在Channel中进行，Channel是进行消息读写的通道，客户端可以建立多个Channel，每个Channel代表一个会话任务。
+3.**Channel**：网络信道，几乎所有的操作都在Channel中进行，Channel是进行消息读写的通道，客户端可以建立多个Channel，每个Channel代表一个会话任务。
 
-4.==Message==：消息，服务器和应用程序之间传送的数据，由Properties和Body组成。Properties可以对消息进行修饰，比如消息的优先级、延迟等高级特性；Body则就是消息体内容。
+4.**Message**：消息，服务器和应用程序之间传送的数据，由Properties和Body组成。Properties可以对消息进行修饰，比如消息的优先级、延迟等高级特性；Body则就是消息体内容。
 
-5.==Virtual Host==：虚拟地址，用于进行逻辑隔离，最上层的消息路由。一个Virtual Host里面可以有若干个Exchange或Queue，同一个Virtual Host里面不能有相同名车的Exchange或Queue
+5.**Virtual Host**：虚拟地址，用于进行逻辑隔离，最上层的消息路由。一个Virtual Host里面可以有若干个Exchange或Queue，同一个Virtual Host里面不能有相同名车的Exchange或Queue
 
-6.==Exchange==：交换机，接收消息，根据路由键转发消息到绑定的消息队列。
+6.**Exchange**：交换机，接收消息，根据路由键转发消息到绑定的消息队列。
 
-7.==Binding==:Exchange和Queue质检的虚拟连接，binding中可以包含routing key
+7.**Binding**:Exchange和Queue质检的虚拟连接，binding中可以包含routing key
 
-8.==Routing key==：一个路由规则，虚拟机可用他来确定如何路由一个特定消息。
+8.**Routing key**：一个路由规则，虚拟机可用他来确定如何路由一个特定消息。
 
-9.==Queue==：也称为Message Queue，消息队列，保存信息并将他们转发给消费者。
+9.**Queue**：也称为Message Queue，消息队列，保存信息并将他们转发给消费者。
 
 #### RabbitMQ整体架构
 
@@ -106,7 +106,9 @@ Access them with `erl -man`, or add this directory to MANPATH.
 
 在浏览器窗口打开`ip:15672(默认端口)`
 
+
 ![](../picture/rabbitmq/rabbitmq8.png)
+
 
 4.常用命令行操作：
 1.`rabbit-server`：启动服务
@@ -326,7 +328,7 @@ channel.basic_publish（exchange = ''，
 
 假设现在有两个工人，如果总是给一个工人发送任务繁重的工作，就会导致一个工人经常忙碌，而另一个工作人员几乎不会做任何工作，而RabbitMQ对此一无所知，任然会均匀发送消息。发生这种情况是因为RabbitMQ只是在消息进入队列时调度消息，他不会查看消费者未确认消息的数量，只是盲目地向第n个消费者发送第n个消息。
 
-！[](http://www.rabbitmq.com/img/tutorials/prefetch-count.png)
+![](http://www.rabbitmq.com/img/tutorials/prefetch-count.png)
 
 为了解决这个问题，我们可以使用`basic.qos`方法和`prefetch_count=1`设置,这意味着在处理并确认前一个消息之前，不要向工作人员发送新消息，相反，他会发送给下一个依然忙碌的worker。
 
@@ -421,7 +423,9 @@ result = channel.queue_declare()
 result = channel.queue_declare(exclusive=True)
 
 ##### 绑定
+
 ![](http://www.rabbitmq.com/img/tutorials/bindings.png)
+
 我们现在已经创建了一个`fanout`交换机和一个队列，现在需要告诉交换机将消息发送到我们的队列，交换机和队列之间的关系称为绑定(binding)
 ```
 channel.queue_bind(exchange = 'logs',queue=result.method.queue)
@@ -431,6 +435,7 @@ channel.queue_bind(exchange = 'logs',queue=result.method.queue)
 列出所有绑定：`rabbitmqctl list_bindings`
 
 把他们放在一起：
+
 ![](http://www.rabbitmq.com/img/tutorials/python-three-overall.png)
 
 生成日志消息的生产者程序与part 2没什么太大的不同，最重要的变化是我们现在想要将消息发布到我们的`logs`交换机而不是无名交换机。我们需要在发送时提供`routing_key`，但是对于`fanout`交换机，它的值会被忽略。`emit_log.py`:
