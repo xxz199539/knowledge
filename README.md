@@ -12,3 +12,5 @@
 
 [eval/exec函数](./PythonBasic/eval函数和exec函数.md)
 
+[RabbitMQ消息中间件](./PythonBasic/Rabbitmq.md)
+
