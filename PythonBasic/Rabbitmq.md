@@ -622,7 +622,8 @@ channel.basic_consume(callback,
 
 channel.start_consuming()
 ```
-如果只想将'warning`和`error`日志消息保存到文件中，只需要打开控制台输入：
+如果只想将`warning`和`error`日志消息保存到文件中，只需要打开控制台输入：
 `python receive_logs_direct.py warning error > logs_from_rabbit.log`,
+
 如果想看到所有的日志消息，可以在控制台输入：
 `python receive_logs_direct.py info warning error`
