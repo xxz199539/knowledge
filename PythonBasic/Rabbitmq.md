@@ -64,11 +64,11 @@ AMQP核心概念：
 
 #### RabbitMQ整体架构
 
-RabbitMQ整体架构如下图：![](..picture/rabbitmq/rabbitmq2.png)
+RabbitMQ整体架构如下图：![](../picture/rabbitmq/rabbitmq2.png)
 
-RabbitMQ消息流转图如下图：![](..picture/rabbitmq/rabbitmq3.png)
+RabbitMQ消息流转图如下图：![](../picture/rabbitmq/rabbitmq3.png)
 
-RabbitMQ负载均衡集群如下图：![](..picture/rabbitmq/rabbitmq7.png)
+RabbitMQ负载均衡集群如下图：![](../picture/rabbitmq/rabbitmq7.png)
 
 #### 安装启动RabbitMQ
 
