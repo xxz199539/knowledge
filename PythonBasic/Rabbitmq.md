@@ -627,3 +627,117 @@ channel.start_consuming()
 
 如果想看到所有的日志消息，可以在控制台输入：
 `python receive_logs_direct.py info warning error`
+
+
+#### part5 Topics(主题)
+
+在上一部分的`Direct`交换机改进了我们的系统，但他仍然有局限性-不能基于多个标准进行路由。从我们的日志记录系统中，我们可能不仅要根据严重等级来订阅日志，还要根据日志的源来订阅日志。
+
+##### topic exchange(主题交换机)
+发送到主题交换机的消息不能有任意的`routing_key`-它必须是由点分隔的单词列表。单词可以是任何内容，但通常它们指定与消息相关的一些功能。一些有效的路由键示例："stock.usd.nyse"，"nyse.vmw"，"quick.orange.rabbit"。路由密钥中可以包含任意数量的单词，最多可达255个字节。
+
+`binding key`也比必须采用相同的形式，主题交换机背后的逻辑类似于直接交换机--使用特定路由秘钥发送消息将被传递到与匹配密钥绑定的所有队列。但是绑定键有两个重要的特殊情况：
+
+1.*（星号）可以替代一个单词；
+2.#（hash）可以替代零个或多个单词；
+在一个例子中解释这个是最容易的：
+
+![](http://www.rabbitmq.com/img/tutorials/python-five.png)
+
+在这个例子中，我们将发送所描述动物的消息，消息将与包含三个单词（两个点）的路由键一起发送。路由键中的第一个单词将描述成一个`celerity`，第二个是`color`，第三个是`species`："<celerity>.<colour>.<species>"。
+
+现在我们创建了三个绑定：Q1：绑定了绑定建"*.orange.*,Q2:"*.*.rabbit"和"lazy.#"。这些绑定可以概括为：
+1.Q1对所有橙色动物感兴趣
+2.Q2希望听到关于兔子及懒惰动物的一切
+
+路由密钥设置为"Quick.orange.rabbit"的消息将传递到两个队列，消息"lazy.orange.elephant"也会同时发送给他们。另一方面，"quick.pink.rabbit"将只会传到Q2一次，即使它匹配两个绑定。"quick.brown.fox"与任何绑定都不匹配，将会被丢弃。
+
+如果我们违反规定并发送带有一个或者四个单词的消息，例如："orange"或"quick.orange.male.rabbit"，这些消息将不匹配任何绑定，将被丢失。另一方面，"lazy.orange.male.rabbit"即使有四个单词，也会匹配最后一个绑定，并被传入到Q2。
+
+综上所诉，即便是传入多个单词的消息，只要有匹配，就可以被传递，否则将会被丢弃。
+
+当队列绑定"#"密钥时，他将接收所有的消息，而不管`routing_key`-如`fanout`交换机
+当特殊字符"*"和"#"未在绑定中使用时，主题交换的行为就像直接交换一样。
+
+##### demo
+
+我们将在我们的日志记录系统中使用主题交换，首先假设日志的路由键有两个词："<facility>.<serverity>"。
+`emit_log_topic.py`:
+```
+#!/usr/bin/env python
+import pika
+import sys
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='topic_logs',
+                         exchange_type='topic')
+
+routing_key = sys.argv[1] if len(sys.argv) > 2 else 'anonymous.info'
+message = ' '.join(sys.argv[2:]) or 'Hello World!'
+channel.basic_publish(exchange='topic_logs',
+                      routing_key=routing_key,
+                      body=message)
+print(" [x] Sent %r:%r" % (routing_key, message))
+connection.close()
+```
+
+`receive_logs_topic.py`:
+
+```
+#!/usr/bin/env python
+import pika
+import sys
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='topic_logs',
+                         exchange_type='topic')
+
+result = channel.queue_declare(exclusive=True)
+queue_name = result.method.queue
+
+binding_keys = sys.argv[1:]
+if not binding_keys:
+    sys.stderr.write("Usage: %s [binding_key]...\n" % sys.argv[0])
+    sys.exit(1)
+
+for binding_key in binding_keys:
+    channel.queue_bind(exchange='topic_logs',
+                       queue=queue_name,
+                       routing_key=binding_key)
+
+print(' [*] Waiting for logs. To exit press CTRL+C')
+
+def callback(ch, method, properties, body):
+    print(" [x] %r:%r" % (method.routing_key, body))
+
+channel.basic_consume(callback,
+                      queue=queue_name,
+                      no_ack=True)
+
+channel.start_consuming()
+
+```
+
+要接收所有的日志：
+`python receive_logs_topic.py "#"`
+
+接收`facility`为"kern"的消息：
+
+`python receive_logs_topic.py "kern.*"`
+
+接收`critical`的消息：
+
+`python receive_logs_topic.py "*.critical"`
+
+或者创建多个绑定：
+
+`python receive_logs_topic.py "kern.*" "*.critical"`
+
+并使用路由键"kern.critical"类型发出日志：
+
+`python emit_log_topic.py "kern.critical" "A critical kernel error"`
+
