@@ -378,7 +378,7 @@ channel.basic_consume(callback,
 
 channel.start_consuming()
 ```
- 使用消息确认和`prefetch_couny`可以设置工作队列，即使RabbitMQ重新启动，持久性选项也可以使任务生效。
+ 使用消息确认和`prefetch_count`可以设置工作队列，即使RabbitMQ重新启动，持久性选项也可以使任务生效。
 
 #### part3 Publish/Subscribe
 
@@ -390,27 +390,27 @@ RabbitMQ中消息传递模型的核心思想是生产者永远不会将任何消
 
 ![](http://www.rabbitmq.com/img/tutorials/exchanges.png)
 
-交换机有几种可供可选的类型：`direct`,'topic`,'headers`,`fanout`，这里只看最后一种。新建一个交换机，命名为`log`。
+交换机有几种可供可选的类型：`direct`,`topic`,'headers`,`fanout`，这里只看最后一种。新建一个交换机，命名为`log`。
 ```
 Channel.exchange_declare(exchange='logs',exchange_type='fanout')
 ```
 `fanout`交换机非常简单，他只是将受到的所有消息广播到他知道的所有队列中，而这正式我们记录器所需要的。   
 在之前我们是通过默认的交换机通过空字符串来识别并向队列发送消息。 
 ```
-channel.basic_publish（exchange = ''，
+channel.basic_publish(exchange = ''，
                       routing_key = 'hello'，
-                      body = message）
+                      body = message)
 ```
 该`exchange`参数是交换机的名称，空字符表示默认或无名交换，消息通过`routing_key`指定的名称路由到队列（如果存在）。
 现在，我们可以发布到我们自己命名来交换：
 ```
-channel.basic_publish（exchange = 'logs'，
+channel.basic_publish(exchange = 'logs'，
                       routing_key = ''，
-                      body = message）
+                      body = message)
 ```
                                       
 ##### 临时队列
-在之前我用过·hello`和`task_queue`队列，当我们想将**worker**指向同一队列，在消费者和生产者之间共享队列时，为队列命名显得十分重要。
+在之前我用过`hello`和`task_queue`队列，当我们想将**worker**指向同一队列，在消费者和生产者之间共享队列时，为队列命名显得十分重要。
 
 但是我们的记录器并非如此，我们希望了解所有的日志消息，而不仅仅是他们的一部分，另外我们也只对目前流动的消息感兴趣，为了解决这个问题，需要做两件事：
 首先，每当我们连接RabbitMQ时，我们都需要一个新的空队列，要做到这一点我们可以创建一个随机名称的队列，甚至是让服务器随机为我们选择一个随机队列名称。我们可以通过不向`queue_declare`提供`queue`参数来做到：
