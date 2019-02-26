@@ -390,7 +390,7 @@ RabbitMQ中消息传递模型的核心思想是生产者永远不会将任何消
 
 ![](http://www.rabbitmq.com/img/tutorials/exchanges.png)
 
-交换机有几种可供可选的类型：`direct`,`topic`,'headers`,`fanout`，这里只看最后一种。新建一个交换机，命名为`log`。
+交换机有几种可供可选的类型：`direct`,`topic`,`headers`,`fanout`，这里只看最后一种。新建一个交换机，命名为`log`。
 ```
 Channel.exchange_declare(exchange='logs',exchange_type='fanout')
 ```
