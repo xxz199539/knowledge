@@ -24,7 +24,7 @@ RocketMQ是阿里开源的消息中间件，目前也是Apache的顶级项目，
 
 
 ### RabbitMQ
-#### RabbitMQ简介
+##### RabbitMQ简介
 RabbitMQ是一个开源的消息代理和队列服务器，用来通过普通协议在完全不同的应用之间共享数据，RabbitMQ是使用Erlang语言来编写的，并且RabbitMQ是基于AMQP协议的.
 
 1.开源、性能优秀、稳定性保障、提供可靠性投递模式、返回模式
@@ -406,7 +406,8 @@ channel.basic_publish（exchange = ''，
 ```
 channel.basic_publish（exchange = 'logs'，
                       routing_key = ''，
-                      body = message）
+            
+          body = message）
 ```
                                       
 ##### 临时队列
