@@ -22,25 +22,19 @@ def mean_shift(data, radius):
         cluster_centroid = data[i]
         cluster_frequency = np.zeros(len(data))
 
-        # Search points in circle
         while True:
             temp_data = []
             for j in range(len(data)):
                 v = data[j]
-                # Handle points in the circles
                 if np.linalg.norm(v - cluster_centroid) <= radius:
                     temp_data.append(v)
                     cluster_frequency[i] += 1
-
-            # Update centroid
             old_centroid = cluster_centroid
             new_centroid = np.average(temp_data, axis=0)
             cluster_centroid = new_centroid
-            # Find the mode
             if np.array_equal(new_centroid, old_centroid):
                 break
 
-        # Combined 'same' clusters
         has_same_cluster = False
         for cluster in clusters:
             if np.linalg.norm(cluster['centroid'] - cluster_centroid) <= radius:
@@ -59,7 +53,7 @@ def mean_shift(data, radius):
     show_clusters(clusters, radius)
 
 
-# Clustering data using frequency
+# 聚类
 def clustering(data, clusters):
     t = []
     for cluster in clusters:
@@ -73,7 +67,7 @@ def clustering(data, clusters):
         clusters[cluster_index]['data'].append(data[i])
 
 
-# Plot clusters
+# 绘制图形
 def show_clusters(clusters, radius):
     colors = 10 * ['r', 'g', 'b', 'k', 'y']
     plt.figure(figsize=(5, 5))
@@ -92,4 +86,4 @@ def show_clusters(clusters, radius):
     plt.show()
 
 
-mean_shift(X, Radius) #Radius代表半径
+mean_shift(X, Radius)  # Radius代表半径
