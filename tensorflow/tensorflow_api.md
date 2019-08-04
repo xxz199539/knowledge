@@ -150,5 +150,94 @@ Use tf.where in 2.0, which has the same broadcast rule as np.where
 [4. 3. 3. 4.]
 ```
 
+`tf.train.exponential_decay(learning_rate,global_step,decay_steps,decay_rate,staircase=False,
+name=None)`:实现了指数衰减学习率，先使较大的学习率得到一个比较优的解，然后随着迭代的继续继续逐步减小学习率，使得模型在训练后期更稳定。它实现了以下代码的功能：
 
+```python
+decayed_learning_rate = learning_rate *
+                        decay_rate ^ (global_step / decay_steps)
+# decayed_learning_rate:每一轮使用的学习率
+# global_step:用于衰减的全局步数
+# learning_rate:事先设定的初始学习率
+# decay_rate:衰减系数
+# decay_steps:衰减速度(通常代表了完整使用一遍训练数据所需要的迭代轮数)
+# staircase为False代表连续衰减，True代表阶梯状衰减
+```
+
+
+
+`tf.contrib.layers.l1_regularizer(lambda)(w)`:L1正则化项的值
+
+`tf.contrib.layers.l2_regularizer(lambda)(w)`:L2正则化项的值
+
+ ```
+>>> weights = tf.constant([[1.0, -2.0],[-3.0, 4.0]])
+>>> with tf.Session() as sess:
+...     print(sess.run(tf.contrib.layers.l1_regularizer(.5)(weights)))
+...     print(sess.run(tf.contrib.layers.l2_regularizer(.5)(weights)))
+... 
+5.0
+7.5
+
+# lambda必须为正的浮点数
+ ```
+
+
+
+`tf.argmax(array, axis)`:根据axis取值的不同返回每行或者每列最大值的索引
+
+```
+>>> v1 = tf.constant([[1,2,3],[2,3,1],[7,5,6]])
+>>> with tf.Session() as sess:
+...     print(sess.run(v1))
+...     print(sess.run(tf.argmax(v1, 0)))  # 比较每一列的元素，输出最大值的索引
+...     print(sess.run(tf.argmax(v1, 1)))  # 比较每一行的元素，输出最大值的索引
+... 
+[[1 2 3]
+ [2 3 1]
+ [7 5 6]]
+[2 2 2]
+[2 1 0]
+```
+
+
+
+`tf.group(*inputs, **kwargs)`:用于创造一个操作，可以将传入参数的所有操作进行分组
+
+```
+generator_train_op = tf.train.AdamOptimizer(g_loss, ...)
+discriminator_train_op = tf.train.AdamOptimizer(d_loss,...)
+train_ops = tf.groups(generator_train_op ,discriminator_train_op)
+
+with tf.Session() as sess:
+  sess.run(train_ops) 
+  # 一旦运行了train_ops,那么里面的generator_train_op和discriminator_train_op都将被调用
+```
+
+`tf.cast(x, dtype, name=None)`:执行 tensorflow 中张量数据类型转换，比如读入的图片如果是int8类型的，一般在要在训练前把图像的数据格式转换为float32。
+
+```
+v1 = tf.Variable([1,2,3,4])
+v2 = tf.cast(v1, tf.float32)
+>>> with tf.Session() as sess:
+...     sess.run(tf.global_variables_initializer())
+...     print(sess.run(v2))
+... 
+[1. 2. 3. 4.]
+```
+
+`tf.add_n(inputs)`:实现一个列表的元素的相加。就是输入的对象是一个列表，列表里的元素可以是向量，矩阵。
+
+```
+>>> input1 = tf.constant([1.0, 2.0, 3.0])
+>>> input2 = tf.Variable(tf.random_uniform([3]))
+>>> out_put = tf.add_n([input1, input2])
+>>> with tf.Session() as sess:
+...     sess.run(tf.global_variables_initializer())
+...     print(sess.run(input1 + input2))
+...     print(sess.run(out_put))
+... 
+[1.9842571 2.7185094 3.945446 ]
+[1.9842571 2.7185094 3.945446 ]
+```
 
