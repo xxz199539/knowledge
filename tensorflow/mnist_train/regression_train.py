@@ -39,7 +39,7 @@ def train(mnist):
     loss = cross_entropy_mean + tf.add_n(tf.compat.v1.get_collection('losses'))
     learning_rate = tf.compat.v1.train.exponential_decay(LEARNING_RATE_BASE, global_step, mnist.train.num_examples / BATCH_SIZE,
                                                LEARNING_RATE_DECAY)
-    train_step = tf.compat.v1.train.AdamOptimizer(1e-4).minimize(loss, global_step=global_step)
+    train_step = tf.compat.v1.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
     train_op = tf.group([train_step, variable_averages_op])
 
     # 使用前向传播的结果计算正确率，如果需要对未知的样例进行分类，那么使用tf.argmax(y, 1)就可以得到输入样例的预测类别

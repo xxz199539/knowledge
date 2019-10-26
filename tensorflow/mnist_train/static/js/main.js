@@ -100,7 +100,6 @@ class Main {
                     var sum_2 = 0
                     for(var i=0;i<(data["site"][0]["output1"]).length;i++)
                     {
-                        value_1[i] = Math.round(data["site"][0]["output1"][i] * 100);
                         if (Math.round(data["site"][0]["output1"][i] * 100) > 0){
                             value_1[i] = Math.round(data["site"][0]["output1"][i] * 100);
                             sum_1 += Math.round(data["site"][0]["output1"][i] * 100)
@@ -110,7 +109,6 @@ class Main {
                     }
                     for(var i=0;i<(data["site"][0]["output2"]).length;i++)
                     {
-                         value_1[i] = Math.round(data["site"][0]["output2"][i] * 100);
                         if (Math.round(data["site"][0]["output2"][i] * 100) > 0){
                             value_2[i] = Math.round(data["site"][0]["output2"][i] * 100);
                             sum_2 += Math.round(data["site"][0]["output2"][i] * 100)
@@ -126,23 +124,15 @@ class Main {
                     var max_index_2 = value_2.indexOf(max_2);
                     for (let j=0;j<10;j++)
                     {
-                        if(value_1[j] < 0){
-                            $('#result tr').eq(j + 1).find('td').eq(1).text('0%');
-                        }else{
-                            $('#result tr').eq(j + 1).find('td').eq(1).text(value_1[j] / sum_1 + '%');
-                        }
+                         $('#result tr').eq(j + 1).find('td').eq(1).text(value_1[j] / sum_1 * 100 + "%");
                          if(j===max_index_1){
                              $('#result tr').eq(max_index_1+1).find('td').eq(1).addClass('success');
                          }
                     }
                     for (let j=0;j<10;j++)
                     {
-                         if(value_2[j] < 0){
-                            $('#result tr').eq(j + 1).find('td').eq(2).text('0%');
-                        }else{
-                            $('#result tr').eq(j + 1).find('td').eq(2).text(value_2[j] / sum_2 + '%');
-                        }
-                         if(j===max_index_2){
+                         $('#result tr').eq(j + 1).find('td').eq(2).text(value_2[j] / sum_2 *100 + "%");
+                         if(j===max_index_1){
                              $('#result tr').eq(max_index_2+1).find('td').eq(2).addClass('success');
                          }
                     }

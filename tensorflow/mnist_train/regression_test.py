@@ -18,7 +18,7 @@ def evaluate_regression(mnist):
         validate_feed = {x: mnist.validation.images, y_: mnist.validation.labels}
 
         # 直接通过调用封装好的函数来计算前向传播的结果，因为测试时不关注正则化损失的值，所以这里用于计算正则化损失的函数被设置为None
-        y = Regression.inference(x, None)
+        y, _ = Regression.inference(x, None)
 
         # 使用前向传播的结果计算正确率，如果需要对未知的样例进行分类，那么使用tf.argmax(y, 1)就可以得到输入样例的预测类别
         correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
